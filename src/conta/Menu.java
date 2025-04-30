@@ -3,6 +3,11 @@ package conta;
 import java.util.Scanner;
 import conta.util.Cores;
 
+import conta.model.ContaCorrente;
+import conta.model.ContaPoupanca;
+import conta.util.Cores;
+
+
 public class Menu {
     public static void main(String[] args) {
         try (Scanner sc = new Scanner(System.in)) {
