@@ -4,6 +4,7 @@ import conta.model.Conta;
 import conta.repository.ContaRepository;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class ContaController implements ContaRepository {
 
@@ -12,110 +13,117 @@ public class ContaController implements ContaRepository {
 
     @Override
     public void procurarPorNumero(int numero) {
-        var conta = buscarNaCollection(numero);
-        if (conta != null)
-            conta.visualizar();
-        else
-            System.out.printf("\nA Conta número %d não foi encontrada\n", numero);
+        Optional<Conta> conta = buscarNaCollection(numero);
+        conta.ifPresentOrElse(
+            Conta::visualizar,
+            () -> System.out.printf("\nA Conta número %d não foi encontrada\n", numero)
+        );
     }
 
     @Override
     public void listarTodas() {
-        for (var conta : listaContas) {
-            conta.visualizar();
+        if (listaContas.isEmpty()) {
+            System.out.println("\nNenhuma conta cadastrada.");
+        } else {
+            for (var conta : listaContas) {
+                conta.visualizar();
+            }
         }
     }
 
     @Override
     public void cadastrar(Conta conta) {
         listaContas.add(conta);
-        System.out.println("A Conta foi criada com sucesso!");
+        System.out.println("\nA Conta foi criada com sucesso!");
     }
 
     @Override
     public void atualizar(Conta conta) {
-        var buscaConta = buscarNaCollection(conta.getNumero());
+        Optional<Conta> buscaConta = buscarNaCollection(conta.getNumero());
 
-        if (buscaConta != null) {
-            listaContas.set(listaContas.indexOf(buscaConta), conta);
-            System.out.println("A Conta foi atualizada com sucesso!");
+        if (buscaConta.isPresent()) {
+            listaContas.set(listaContas.indexOf(buscaConta.get()), conta);
+            System.out.println("\nA Conta foi atualizada com sucesso!");
         } else {
-            System.out.println("A Conta não foi encontrada!");
+            System.out.println("\nA Conta não foi encontrada!");
         }
     }
 
     @Override
     public void deletar(int numero) {
-        var conta = buscarNaCollection(numero);
-        if (conta != null) {
-            listaContas.remove(conta);
-            System.out.println("A Conta foi deletada com sucesso!");
+        Optional<Conta> conta = buscarNaCollection(numero);
+
+        if (conta.isPresent()) {
+            listaContas.remove(conta.get());
+            System.out.println("\nA Conta foi deletada com sucesso!");
         } else {
-            System.out.println("A Conta não foi encontrada!");
+            System.out.println("\nA Conta não foi encontrada!");
         }
     }
 
     @Override
     public void sacar(int numero, float valor) {
-        var conta = buscarNaCollection(numero);
-        if (conta != null) {
-            if (conta.sacar(valor))
-                System.out.println("Saque efetuado com sucesso!");
-            else
-                System.out.println("Saldo insuficiente!");
+        Optional<Conta> conta = buscarNaCollection(numero);
+
+        if (conta.isPresent()) {
+            if (conta.get().sacar(valor)) {
+                System.out.println("\nSaque efetuado com sucesso!");
+            } else {
+                System.out.println("\nSaldo insuficiente!");
+            }
         } else {
-            System.out.println("Conta não encontrada!");
+            System.out.println("\nConta não encontrada!");
         }
     }
 
     @Override
     public void depositar(int numero, float valor) {
-        var conta = buscarNaCollection(numero);
-        if (conta != null) {
-            conta.depositar(valor);
-            System.out.println("Depósito efetuado com sucesso!");
+        Optional<Conta> conta = buscarNaCollection(numero);
+
+        if (conta.isPresent()) {
+            conta.get().depositar(valor);
+            System.out.println("\nDepósito efetuado com sucesso!");
         } else {
-            System.out.println("Conta não encontrada!");
+            System.out.println("\nConta não encontrada!");
         }
     }
 
     @Override
     public void transferir(int numeroOrigem, int numeroDestino, float valor) {
-        var contaOrigem = buscarNaCollection(numeroOrigem);
-        var contaDestino = buscarNaCollection(numeroDestino);
+        Optional<Conta> contaOrigem = buscarNaCollection(numeroOrigem);
+        Optional<Conta> contaDestino = buscarNaCollection(numeroDestino);
 
-        if (contaOrigem != null && contaDestino != null) {
-            if (contaOrigem.sacar(valor)) {
-                contaDestino.depositar(valor);
-                System.out.println("Transferência realizada com sucesso!");
+        if (contaOrigem.isPresent() && contaDestino.isPresent()) {
+            if (contaOrigem.get().sacar(valor)) {
+                contaDestino.get().depositar(valor);
+                System.out.println("\nTransferência realizada com sucesso!");
             } else {
-                System.out.println("Saldo insuficiente para transferir!");
+                System.out.println("\nSaldo insuficiente para transferir!");
             }
         } else {
-            System.out.println("Conta de origem ou destino não encontrada!");
+            System.out.println("\nConta de origem ou destino não encontrada!");
         }
     }
 
+    // Métodos auxiliares
+
+    public int gerarNumero() {
+        return ++numero;
+    }
+
+    public Optional<Conta> buscarNaCollection(int numero) {
+        return listaContas.stream()
+                .filter(conta -> conta.getNumero() == numero)
+                .findFirst();
+    }
+
     // Getters e Setters
+
     public ArrayList<Conta> getListaContas() {
         return listaContas;
     }
 
     public void setListaContas(ArrayList<Conta> listaContas) {
         this.listaContas = listaContas;
-    }
-
-    // Método auxiliar para gerar número sequencial
-    public int gerarNumero() {
-        return ++numero;
-    }
-
-    // Método auxiliar para buscar conta na lista
-    public Conta buscarNaCollection(int numero) {
-        for (var conta : listaContas) {
-            if (conta.getNumero() == numero)
-                return conta;
-        }
-        return null;
     }
 }
