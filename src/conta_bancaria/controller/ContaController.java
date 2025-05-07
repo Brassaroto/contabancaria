@@ -126,4 +126,20 @@ public class ContaController implements ContaRepository {
     public void setListaContas(ArrayList<Conta> listaContas) {
         this.listaContas = listaContas;
     }
+
+    // Método adicionado
+    public void listarPorTitular(String titular) {
+        boolean encontrado = false;
+
+        for (var conta : listaContas) {
+            if (conta.getTitular().toLowerCase().contains(titular.toLowerCase())) {
+                conta.visualizar();
+                encontrado = true;
+            }
+        }
+
+        if (!encontrado) {
+            System.out.println("\nNenhuma conta encontrada com o titular: " + titular);
+        }
+    }
 }
